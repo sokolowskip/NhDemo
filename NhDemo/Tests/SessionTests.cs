@@ -279,5 +279,73 @@ namespace NhDemo.Tests
                 anotherDocument.Number.ShouldBe("7/2016");
             }
         }
+
+        [Fact]
+        public void Evict_ShouldRemoveEntityFromSession()
+        {
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var document = session.Get<Document>(_documentId);
+                session.Contains(document).ShouldBeTrue();
+
+                session.Evict(document);
+
+                session.Contains(document).ShouldBeFalse();
+            }
+        }
+
+        [Fact]
+        public void EvictedEntity_Should_NotBeSaved()
+        {
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var document = session.Get<Document>(_documentId);
+                session.Evict(document);
+                document.Number = "2/2016";
+                session.Flush();
+                tran.Commit();
+            }
+
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var document = session.Get<Document>(_documentId);
+                document.Number.ShouldBe(initialDocumentNumber);
+            }
+        }
+
+        [Fact]
+        public void ClearShould_RemoveAllEntitiesFromSession()
+        {
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var document = session.Get<Document>(_documentId);
+                session.Statistics.EntityCount.ShouldBe(1);
+                session.Clear();
+                session.Statistics.EntityCount.ShouldBe(0);
+            }
+        }
+
+        [Fact]
+        public void DeleteTest()
+        {
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                session.Delete(session.Load<Document>(_documentId));
+                session.Flush();
+                tran.Commit();
+            }
+
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var document = session.Get<Document>(_documentId);
+                document.ShouldBeNull();
+            }
+        }
     }
 }
