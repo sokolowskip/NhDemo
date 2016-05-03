@@ -1,6 +1,7 @@
 ﻿using System;
 using NhDemo.Configuration;
 using NhDemo.Entities;
+using NHibernate;
 using NHibernate.Tuple;
 using Shouldly;
 using Xunit;
@@ -9,26 +10,71 @@ namespace NhDemo.Tests
 {
     public class SessionTests
     {
-        [Fact]
-        public void SaveTest()
+        private readonly int _documentId;
+        private string initialDocumentNumber = "1/2016";
+
+        public SessionTests()
         {
-            int documentId;
             using (var session = SessionFactory.OpenSession())
             using (var tran = session.BeginTransaction())
             {
                 var document = new Document();
-                document.Number = "1/2016";
+                document.Number = initialDocumentNumber;
 
                 session.Save(document);
                 session.Flush();
                 tran.Commit();
-                documentId = document.Id;
+                _documentId = document.Id;
+            }
+        }
+
+        [Fact]
+        public void SaveTest()
+        {
+            using (var session = SessionFactory.OpenSession())
+            {
+                var document = session.Get<Document>(_documentId);
+                document.Number.ShouldBe(initialDocumentNumber);
+            }
+        }
+
+        [Fact]
+        public void UpdateTest()
+        {
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var document = new Document
+                {
+                    Id = _documentId,
+                    Number = "2/2016"
+                };
+
+                session.Update(document);
+                session.Flush();
+                tran.Commit();
             }
 
             using (var session = SessionFactory.OpenSession())
             {
-                var document = session.Get<Document>(documentId);
-                document.Number.ShouldBe("1/2016");
+                var document = session.Get<Document>(_documentId);
+                document.Number.ShouldBe("2/2016");
+            }
+        }
+
+        [Fact]
+        public void Update_Should_ThrowExcpetion_WhenEntityWithSameId_IsAlreadyInSession()
+        {
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                session.Get<Document>(_documentId);
+                var document = new Document
+                {
+                    Id = _documentId,
+                    Number = "2/2016"
+                };
+                Assert.Throws<NonUniqueObjectException>(() => session.Update(document));
             }
         }
     }
