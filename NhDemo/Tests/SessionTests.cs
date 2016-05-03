@@ -189,5 +189,50 @@ namespace NhDemo.Tests
                 anotherDocument.ShouldNotBe(document);
             }
         }
+
+
+        [Fact]
+        public void MergeNonPersistedObject_ShouldPersistIt()
+        {
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var documentFromDatabase = session.Get<Document>(_documentId);
+                var document = new Document
+                {
+                    Id = _documentId + 1,
+                    Number = "7/2016"
+                };
+
+                session.Merge(document);
+                session.Flush();
+                tran.Commit();
+            }
+
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var document = session.Get<Document>(_documentId + 1);
+                document.Number.ShouldBe("7/2016");
+            }
+        }
+
+        [Fact]
+        public void UpdateNonPersistedObject_ShouldThrowExcpetion()
+        {
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var document = new Document
+                {
+                    Id = _documentId + 1,
+                    Number = "7/2016"
+                };
+
+                session.Update(document);
+                var exception = Assert.Throws<StaleStateException>(() => session.Flush());
+                exception.Message.ShouldBe("Batch update returned unexpected row count from update; actual row count: 0; expected: 1");
+            }
+        }
     }
 }
