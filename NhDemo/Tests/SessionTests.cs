@@ -39,6 +39,45 @@ namespace NhDemo.Tests
         }
 
         [Fact]
+        public void FlushUpdatesEntity_When_ItIsInSession()
+        {
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var document = session.Get<Document>(_documentId);
+                document.Number = "2/2016";
+                
+                session.Flush();
+                tran.Commit();
+            }
+
+            using (var session = SessionFactory.OpenSession())
+            {
+                var document = session.Get<Document>(_documentId);
+                document.Number.ShouldBe("2/2016");
+            }
+        }
+
+        [Fact]
+        public void WithoutFlush_EntityIsntUpdated()
+        {
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var document = session.Get<Document>(_documentId);
+                document.Number = "2/2016";
+
+                tran.Commit();
+            }
+
+            using (var session = SessionFactory.OpenSession())
+            {
+                var document = session.Get<Document>(_documentId);
+                document.Number.ShouldBe(initialDocumentNumber);
+            }
+        }
+
+        [Fact]
         public void UpdateTest()
         {
             using (var session = SessionFactory.OpenSession())
