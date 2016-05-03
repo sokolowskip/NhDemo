@@ -1,8 +1,6 @@
-﻿using System;
-using NhDemo.Configuration;
+﻿using NhDemo.Configuration;
 using NhDemo.Entities;
 using NHibernate;
-using NHibernate.Tuple;
 using Shouldly;
 using Xunit;
 
@@ -114,6 +112,81 @@ namespace NhDemo.Tests
                     Number = "2/2016"
                 };
                 Assert.Throws<NonUniqueObjectException>(() => session.Update(document));
+            }
+        }
+
+        [Fact]
+        public void Merge_Should_UpdateEntity_WhenAnotherInstanceIsInSession()
+        {
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                session.Get<Document>(_documentId);
+                var document = new Document
+                {
+                    Id = _documentId,
+                    Number = "2/2016"
+                };
+
+                session.Merge(document);
+                session.Flush();
+                tran.Commit();
+            }
+
+            using (var session = SessionFactory.OpenSession())
+            {
+                var document = session.Get<Document>(_documentId);
+                document.Number.ShouldBe("2/2016");
+            }
+        }
+
+        [Fact]
+        public void Merge_Should_UpdateAttributesOfOtherObjectInSessionWithSameId()
+        {
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var documentFromDatabase = session.Get<Document>(_documentId);
+                var document = new Document
+                {
+                    Id = _documentId,
+                    Number = "2/2016"
+                };
+
+                session.Merge(document);
+                
+                documentFromDatabase.Number.ShouldBe("2/2016");
+                document.ShouldNotBe(documentFromDatabase);
+            }
+        }
+
+        [Fact]
+        public void SecondMerge_Should_UpdateOnlyEntityFromDatabase()
+        {
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var documentFromDatabase = session.Get<Document>(_documentId);
+                var document = new Document
+                {
+                    Id = _documentId,
+                    Number = "2/2016"
+                };
+
+                session.Merge(document);
+
+                var anotherDocument = new Document
+                {
+                    Id = _documentId,
+                    Number = "3/2016"
+                };
+
+                session.Merge(anotherDocument);
+
+                documentFromDatabase.Number.ShouldBe("3/2016");
+                document.Number.ShouldBe("2/2016");
+                anotherDocument.ShouldNotBe(documentFromDatabase);
+                anotherDocument.ShouldNotBe(document);
             }
         }
     }
