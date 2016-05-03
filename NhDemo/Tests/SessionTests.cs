@@ -44,7 +44,7 @@ namespace NhDemo.Tests
             {
                 var document = session.Get<Document>(_documentId);
                 document.Number = "2/2016";
-                
+
                 session.Flush();
                 tran.Commit();
             }
@@ -154,7 +154,7 @@ namespace NhDemo.Tests
                 };
 
                 session.Merge(document);
-                
+
                 documentFromDatabase.Number.ShouldBe("2/2016");
                 document.ShouldNotBe(documentFromDatabase);
             }
@@ -232,6 +232,51 @@ namespace NhDemo.Tests
                 session.Update(document);
                 var exception = Assert.Throws<StaleStateException>(() => session.Flush());
                 exception.Message.ShouldBe("Batch update returned unexpected row count from update; actual row count: 0; expected: 1");
+            }
+        }
+
+        [Fact]
+        public void SaveOrUpdate_EntityWithNonExistentId_ShouldThrowException()
+        {
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var document = new Document
+                {
+                    Id = _documentId + 1,
+                    Number = "7/2016"
+                };
+
+                session.SaveOrUpdate(document);
+                var exception = Assert.Throws<StaleStateException>(() => session.Flush());
+                exception.Message.ShouldBe("Batch update returned unexpected row count from update; actual row count: 0; expected: 1");
+            }
+        }
+
+        [Fact]
+        public void SaveOrUpdate_EntityWithNoId_ShouldPersistIt()
+        {
+            int anotherDocumentd;
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var anotherDocument = new Document
+                {
+                    Number = "7/2016"
+                };
+
+                session.SaveOrUpdate(anotherDocument);
+                session.Flush();
+                anotherDocument.Id.ShouldNotBe(_documentId);
+                anotherDocumentd = anotherDocument.Id;
+                tran.Commit();
+            }
+
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var anotherDocument = session.Get<Document>(anotherDocumentd);
+                anotherDocument.Number.ShouldBe("7/2016");
             }
         }
     }
