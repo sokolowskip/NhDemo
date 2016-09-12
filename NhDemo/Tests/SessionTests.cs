@@ -100,7 +100,7 @@ namespace NhDemo.Tests
         }
 
         [Fact]
-        public void Update_Should_ThrowExcpetion_WhenEntityWithSameId_IsAlreadyInSession()
+        public void Update_Should_ThrowException_WhenEntityWithSameId_IsAlreadyInSession()
         {
             using (var session = SessionFactory.OpenSession())
             using (var tran = session.BeginTransaction())
