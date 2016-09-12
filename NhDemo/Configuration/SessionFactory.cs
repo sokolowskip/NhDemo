@@ -1,5 +1,10 @@
-﻿using FluentNHibernate.Cfg;
+﻿using System;
+using System.Configuration;
+using System.Data.SqlClient;
+using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
+using Microsoft.SqlServer.Management.Common;
+using Microsoft.SqlServer.Management.Smo;
 using NhDemo.Entities;
 using NHibernate;
 using NHibernate.Tool.hbm2ddl;
@@ -28,7 +33,7 @@ namespace NhDemo.Configuration
                 .Database(
                     MsSqlConfiguration
                         .MsSql2008
-                        .ConnectionString(@"Server=.\SQLEXPRESS;Initial Catalog=NhDemo;Trusted_Connection=True;")
+                        .ConnectionString($@"Server={ServerName};Initial Catalog=NhDemo;Trusted_Connection=True;")
                         .ShowSql())
                 .Mappings(m => m.FluentMappings.AddFromAssemblyOf<Document>())
                 .ExposeConfiguration(cfg => new SchemaExport(cfg).Create(true, true))
@@ -36,5 +41,55 @@ namespace NhDemo.Configuration
 
             return sessionFactory;
         }
+
+        public static void RestoreDatabase(string databaseName, string backUpFile)
+        {
+            if (DoesDatabaseExist(databaseName))
+            {
+                DeleteDatabase(databaseName);
+            }
+
+            var connection = new ServerConnection(ServerName);
+                Server sqlServer = new Server(connection);
+                Restore rstDatabase = new Restore();
+                rstDatabase.Action = RestoreActionType.Database;
+                rstDatabase.Database = databaseName;
+                BackupDeviceItem bkpDevice = new BackupDeviceItem(backUpFile, DeviceType.File);
+                rstDatabase.Devices.Add(bkpDevice);
+                rstDatabase.ReplaceDatabase = true;
+                rstDatabase.SqlRestore(sqlServer);
+
+            _factory = Fluently.Configure()
+                .Database(
+                    MsSqlConfiguration
+                        .MsSql2008
+                        .ConnectionString($@"Server={ServerName};Initial Catalog={databaseName};Trusted_Connection=True;")
+                        .ShowSql())
+                .Mappings(m => m.FluentMappings.AddFromAssemblyOf<Document>())
+                .ExposeConfiguration(cfg => new SchemaExport(cfg).Create(true, false))
+                .BuildSessionFactory();
+        }
+
+        public static bool DoesDatabaseExist(string databaseName)
+        {
+            using (var connection = new SqlConnection($"server={ServerName};Trusted_Connection=yes"))
+            {
+                using (var command = new SqlCommand($"SELECT db_id('{databaseName}')", connection))
+                {
+                    connection.Open();
+                    return (command.ExecuteScalar() != DBNull.Value);
+                }
+            }
+        }
+
+        public static void DeleteDatabase(string databaseName)
+        {
+            var connection = new ServerConnection(ServerName);
+            Server sqlServer = new Server(connection);
+            sqlServer.KillDatabase(databaseName);
+        }
+
+        private static string ServerName => ConfigurationManager.AppSettings["serverName"];
+
     }
 }

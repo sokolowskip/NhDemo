@@ -21,11 +21,11 @@ namespace NhDemo.Tests
         }
 
         [Theory]
-        [InlineData(1000)]
-        [InlineData(100)]
-        [InlineData(10)]
         [InlineData(1)]
-        public void Insert1000EntitiesShoudBeFast(int batchSize)
+        [InlineData(10)]
+        [InlineData(100)]
+        [InlineData(1000)]
+        public void ElapsedTimeOfInsert(int batchSize)
         {
             using (SessionFactory.OpenSession()) { }
         
