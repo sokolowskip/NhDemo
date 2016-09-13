@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Configuration;
 using System.Data.SqlClient;
+using System.IO;
 using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
 using Microsoft.SqlServer.Management.Common;
@@ -50,14 +51,16 @@ namespace NhDemo.Configuration
             }
 
             var connection = new ServerConnection(ServerName);
-                Server sqlServer = new Server(connection);
-                Restore rstDatabase = new Restore();
-                rstDatabase.Action = RestoreActionType.Database;
-                rstDatabase.Database = databaseName;
-                BackupDeviceItem bkpDevice = new BackupDeviceItem(backUpFile, DeviceType.File);
-                rstDatabase.Devices.Add(bkpDevice);
-                rstDatabase.ReplaceDatabase = true;
-                rstDatabase.SqlRestore(sqlServer);
+            Server sqlServer = new Server(connection);
+            Restore rstDatabase = new Restore();
+            rstDatabase.Action = RestoreActionType.Database;
+            rstDatabase.Database = databaseName;
+            BackupDeviceItem bkpDevice = new BackupDeviceItem(backUpFile, DeviceType.File);
+            rstDatabase.Devices.Add(bkpDevice);
+            rstDatabase.ReplaceDatabase = true;
+            rstDatabase.RelocateFiles.Add(new RelocateFile(databaseName,Path.Combine(DataPath, databaseName + ".mdf")));
+            rstDatabase.RelocateFiles.Add(new RelocateFile(databaseName + "_log", Path.Combine(DataPath, databaseName + "_log.ldf")));
+            rstDatabase.SqlRestore(sqlServer);
 
             _factory = Fluently.Configure()
                 .Database(
@@ -90,6 +93,6 @@ namespace NhDemo.Configuration
         }
 
         private static string ServerName => ConfigurationManager.AppSettings["serverName"];
-
+        private static string DataPath => ConfigurationManager.AppSettings["dataPath"];
     }
 }
