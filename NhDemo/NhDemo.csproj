@@ -80,6 +80,7 @@
     <Compile Include="Enverse\Basket.cs" />
     <Compile Include="Enverse\EnverseTests.cs" />
     <Compile Include="Enverse\Library.cs" />
+    <Compile Include="Loading\LoadingTests.cs" />
     <Compile Include="Mappings\DocumentMap.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Configuration\SessionFactory.cs" />
