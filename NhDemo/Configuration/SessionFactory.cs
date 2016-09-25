@@ -6,7 +6,7 @@ using FluentNHibernate.Cfg;
 using FluentNHibernate.Cfg.Db;
 using Microsoft.SqlServer.Management.Common;
 using Microsoft.SqlServer.Management.Smo;
-using NhDemo.Entities;
+using NhDemo.Session;
 using NHibernate;
 using NHibernate.Tool.hbm2ddl;
 
@@ -30,17 +30,58 @@ namespace NhDemo.Configuration
 
         private static ISessionFactory InitializeSessionFactory()
         {
+            ConfigureDatabase();
             var sessionFactory = Fluently.Configure()
                 .Database(
                     MsSqlConfiguration
                         .MsSql2008
-                        .ConnectionString($@"Server={ServerName};Initial Catalog=NhDemo;Trusted_Connection=True;")
+                        .ConnectionString(ConnectionStringToDatabase)
                         .ShowSql())
                 .Mappings(m => m.FluentMappings.AddFromAssemblyOf<Document>())
                 .ExposeConfiguration(cfg => new SchemaExport(cfg).Create(true, true))
                 .BuildSessionFactory();
 
             return sessionFactory;
+        }
+
+        private static void ConfigureDatabase()
+        {
+            if (DoesDatabaseExist("NhDemo"))
+            {
+                DeleteDatabase("NhDemo");
+            }
+            CreateDatabase("NhDemo");
+            CreateSchemas("Windows", "Baskets", "Libraries", "Documents", "Analytics", "Orders");
+        }
+
+        private static void CreateDatabase(string databaseName)
+        {
+            using (var connection = new SqlConnection(ConnectionStringToServer))
+            {
+                connection.Open();
+                using (var command = new SqlCommand($"CREATE DATABASE {databaseName};", connection))
+                    command.ExecuteNonQuery();
+            }
+        }
+
+        private static void CreateSchemas(params string[] names)
+        {
+            using (var connection = new SqlConnection(ConnectionStringToDatabase))
+            {
+                connection.Open();
+                foreach (var name in names)
+                {
+                    using (var command = new SqlCommand(
+                        "IF NOT EXISTS ( " +
+                        "SELECT  schema_name " +
+                        "FROM    information_schema.schemata " +
+                        $"WHERE   schema_name = '{name}') " +
+                        "BEGIN " +
+                        $"EXEC sp_executesql N'CREATE SCHEMA {name}' " +
+                        "END", connection))
+                        command.ExecuteNonQuery();
+                }
+            }
         }
 
         public static void RestoreDatabase(string databaseName, string backUpFile)
@@ -75,7 +116,7 @@ namespace NhDemo.Configuration
 
         public static bool DoesDatabaseExist(string databaseName)
         {
-            using (var connection = new SqlConnection($"server={ServerName};Trusted_Connection=yes"))
+            using (var connection = new SqlConnection(ConnectionStringToServer))
             {
                 using (var command = new SqlCommand($"SELECT db_id('{databaseName}')", connection))
                 {
@@ -92,6 +133,8 @@ namespace NhDemo.Configuration
             sqlServer.KillDatabase(databaseName);
         }
 
+        private static string ConnectionStringToDatabase => $@"Server={ServerName};Initial Catalog=NhDemo;Trusted_Connection=True;";
+        private static string ConnectionStringToServer => $@"Server={ServerName};Trusted_Connection=True;";
         private static string ServerName => ConfigurationManager.AppSettings["serverName"];
         private static string DataPath => ConfigurationManager.AppSettings["dataPath"];
     }

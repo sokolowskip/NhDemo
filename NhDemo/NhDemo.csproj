@@ -77,18 +77,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Enverse\Basket.cs" />
-    <Compile Include="Enverse\EnverseTests.cs" />
-    <Compile Include="Enverse\Library.cs" />
-    <Compile Include="Loading\LoadingTests.cs" />
-    <Compile Include="Mappings\DocumentMap.cs" />
+    <Compile Include="3.Inverse\Basket.cs" />
+    <Compile Include="3.Inverse\InverseTests.cs" />
+    <Compile Include="3.Inverse\Library.cs" />
+    <Compile Include="4.Loading\LoadingTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Configuration\SessionFactory.cs" />
-    <Compile Include="Entities\Document.cs" />
-    <Compile Include="Tests\BulkInsertTest.cs" />
-    <Compile Include="Tests\DatabaseFixture.cs" />
-    <Compile Include="Tests\QueryTests.cs" />
-    <Compile Include="Tests\SessionTests.cs" />
+    <Compile Include="1.Session\Document.cs" />
+    <Compile Include="2.BatchSize\BatchSizeTests.cs" />
+    <Compile Include="5.Query\DatabaseFixture.cs" />
+    <Compile Include="5.Query\QueryTests.cs" />
+    <Compile Include="1.Session\SessionTests.cs" />
     <Compile Include="Tests\XUnitTests.cs" />
   </ItemGroup>
   <ItemGroup>
