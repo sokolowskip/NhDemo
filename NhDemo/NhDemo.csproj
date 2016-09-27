@@ -77,6 +77,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="1.Session\Contractor.cs" />
+    <Compile Include="1.Session\SaveTests.cs" />
     <Compile Include="3.Inverse\Basket.cs" />
     <Compile Include="3.Inverse\InverseTests.cs" />
     <Compile Include="3.Inverse\Library.cs" />

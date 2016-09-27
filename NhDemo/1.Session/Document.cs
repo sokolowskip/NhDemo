@@ -14,7 +14,7 @@ namespace NhDemo.Session
         public DocumentMap()
         {
             Schema("Documents");
-            Id(x => x.Id).GeneratedBy.HiLo("0");
+            Id(x => x.Id).GeneratedBy.HiLo("20");
             Map(x => x.Number);
         }
     }

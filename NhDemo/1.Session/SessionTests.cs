@@ -36,6 +36,34 @@ namespace NhDemo.Session
         }
 
         [Fact]
+        public void Save_can_cause_insert_to_database_but_not_full_flush()
+        {
+            long contractorId;
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var document = session.Get<Document>(_documentId);
+                document.Number = "2/2016";
+
+                var contractor = new Contractor();
+                contractor.Name = "Jan Kowalski";
+                session.Save(contractor);
+                contractorId = contractor.Id;
+
+                tran.Commit();
+            }
+
+            using (var session = SessionFactory.OpenSession())
+            {
+                var document = session.Get<Document>(_documentId);
+                document.Number.ShouldBe("1/2016");
+
+                var contractor = session.Get<Contractor>(contractorId);
+                contractor.ShouldNotBeNull();
+            }
+        }
+
+        [Fact]
         public void FlushUpdatesEntity_When_ItIsInSession()
         {
             using (var session = SessionFactory.OpenSession())
@@ -71,6 +99,27 @@ namespace NhDemo.Session
             {
                 var document = session.Get<Document>(_documentId);
                 document.Number.ShouldBe(initialDocumentNumber);
+            }
+        }
+
+        [Fact]
+        public void WithoutFlush_EntityIsntInserted()
+        {
+            int id;
+            using (var session = SessionFactory.OpenSession())
+            using (var tran = session.BeginTransaction())
+            {
+                var document2 = new Document();
+                document2.Number = "2/2016";
+                session.Save(document2);
+                id = document2.Id;
+                tran.Commit();
+            }
+
+            using (var session = SessionFactory.OpenSession())
+            {
+                var document2 = session.Get<Document>(id);
+                document2.ShouldBeNull();
             }
         }
 
