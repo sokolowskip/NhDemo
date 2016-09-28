@@ -83,6 +83,7 @@
     <Compile Include="3.Inverse\InverseTests.cs" />
     <Compile Include="3.Inverse\Library.cs" />
     <Compile Include="4.Loading\LoadingTests.cs" />
+    <Compile Include="5.Query\HavingCountTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Configuration\SessionFactory.cs" />
     <Compile Include="1.Session\Document.cs" />
