@@ -11,7 +11,7 @@ namespace NhDemo.Query
             var current = Directory.GetCurrentDirectory();
             var path = Path.Combine(current, @"..\..\..\nhdemo.bak");
             SessionFactory.RestoreDatabase("NhDemo", path);
-        }
+        }   
     }
 
     [CollectionDefinition("DatabaseFixtures")]

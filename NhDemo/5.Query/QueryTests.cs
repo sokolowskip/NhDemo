@@ -38,7 +38,7 @@ namespace NhDemo.Query
                 OrderDetail orderDetail = null;
                 var orders = session.QueryOver<Order>()
                     .JoinAlias(x => x.OrderDetails, () => orderDetail)
-                    .WhereRestrictionOn(() => orderDetail.Product.Id).IsIn(productIds)
+                    .WhereRestrictionOn(() => orderDetail.ProductId).IsIn(productIds)
                     .List();
 
                 stopwatch.Stop();
@@ -62,7 +62,7 @@ namespace NhDemo.Query
                 OrderDetail orderDetail = null;
                 var orders = session.QueryOver<Order>()
                     .JoinAlias(x => x.OrderDetails, () => orderDetail)
-                    .WithSubquery.WhereProperty(() => orderDetail.Product.Id).In(productsQuery)
+                    .WithSubquery.WhereProperty(() => orderDetail.ProductId).In(productsQuery)
                     .List();
 
                 stopwatch.Stop();
@@ -83,7 +83,7 @@ namespace NhDemo.Query
                         .JoinAlias(x => x.Categories, () => categoryAlias)
                         .WhereRestrictionOn(() => categoryAlias.Name)
                         .IsLike("99", MatchMode.Anywhere)
-                        .Where(x => x.Id == orderDetail.Product.Id)
+                        .Where(x => x.Id == orderDetail.ProductId)
                         .Select(x => x.Id);
 
                 
@@ -148,7 +148,7 @@ namespace NhDemo.Query
     public class OrderDetail
     {
         public virtual Guid Id { get; set; }
-        public virtual Product Product { get; set; }
+        public virtual Guid ProductId { get; set; }
         public virtual decimal Price { get; set; }
         public virtual decimal Quantity { get; set; }
         public virtual Order Order { get; set; }
@@ -195,7 +195,7 @@ namespace NhDemo.Query
             Id(x => x.Id).GeneratedBy.GuidComb();
             Map(x => x.Price);
             Map(x => x.Quantity);
-            References(x => x.Product);
+            Map(x => x.ProductId).Column("Product_id");
             References(x => x.Order);
         }
     }
